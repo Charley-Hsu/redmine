@@ -1,0 +1,20 @@
+{
+  "name": "redmine",
+  "version": "1.0.0",
+  "description": "A tool for automatic allocation of jobs based on Redmine",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index",
+    "start": "node server.js"
+  },
+  "author": "TG Web",
+  "license": "MIT",
+  "dependencies": {
+    "async": "^2.5.0",
+    "cheerio": "^1.0.0-rc.2",
+    "eventproxy": "^1.0.0",
+    "html-entities": "^1.2.1",
+    "request": "^2.83.0",
+    "superagent": "^3.6.3"
+  }
+}
