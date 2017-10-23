@@ -38,39 +38,176 @@ var getToken = function getToken(callback){
 }
 
 var login = function login(token,cookie,utf8,callback){
-    console.log("----------------cookie1",cookie)
+    console.log("cookie1",cookie)
     superagent.post('http://redmine.51tiangou.com/login')
         .type('form')
+        .redirects(0)
         .set('Content-Type', 'application/x-www-form-urlencoded')
         .set("Cookie", cookie)  
         .send({username:"xuqiang"})
         .send({password:"TEce@2017"})
-        .send({back_url:"http://redmine/"})
+        .send({back_url:"http://redmine.51tiangou.com/my/page"})
         .send({authenticity_token:token})
         .send({utf8:utf8})
         .end(function(err,res){
             if (err) {
-                console.log("+++++++++++++++++++++++++++++++++++",err);
+                var cookie1 = res.header['set-cookie'][0];
+                //console.log("+++++++++++++++++++++++++++++++++++",res.header['set-cookie'][0]);
+                callback(null,cookie1)
             }else{
-                 console.log("res",res.header['set-cookie']);
-                callback(null,res)           
+                 console.log("res",res.header);
+                 callback(null,res)           
             }
         })
 }
 
-// var page = function page(cookie,callback){
-//     superagent.get('http://redmine.51tiangou.com')
-//         .end(function(err,res){
-//             var $ =  cheerio.load(res.text);
-//             var token =  $('input[type="hidden"][name="authenticity_token"]').val();
-//             //从response中得到cookie
-//             var cookie = res.header['set-cookie'][0];
-//                 cookie = (cookie.split(";"))[0];
-//             var str = '&#x2713;';
-//             var utf8 = entities.decode(str);
-//             callback(null,token,cookie,utf8)
-//         })
-// }
+var page = function page(cookie,callback){
+    console.log("cookie2",cookie)
+    superagent.get('http://redmine.51tiangou.com/my/page')
+        .set("Cookie", cookie) 
+        .end(function(err,res){
+            if (err) {
+                console.log("res",res);
+                callback(null,res)  
+            }else{
+                 var cookie2 = res.header['set-cookie'][0];
+                 var $ =  cheerio.load(res.text);
+                 var requirementList= [];
+                 $('.tracker').each(function(i, elem) {
+                     var str = entities.decode($(this).next().html());
+                     if ($(this).text() === '需求' && str.indexOf("(技术宣讲)") > 0) {
+                         var obj = {};
+                         obj.type = "需求--(技术宣讲)";
+                         obj.id = $(this).prev().prev().text().replace(/[\r\n]/g, "").replace(/[ ]/g,"");
+                         obj.subject = entities.decode($(this).next().children().html());
+                         requirementList[i] =  obj;                   
+                     }
+                 });
+                 requirementList.join(', ');
+                 callback(null,cookie2,requirementList)
+            }
+        })
+}
+
+var addRequirement = function addRequirement(cookie,requirementList,callback){
+    var str = '&#x2713;';
+    var utf8 = entities.decode(str);
+    //status_id 状态 priority_id 优先级 assigned_to_id 指向id category_id 类别 fixed_version_id 目标版本
+    var data = `------WebKitFormBoundarySSBxB9BodXqi4Y76
+Content-Disposition: form-data; name="utf8"
+
+${utf8}
+------WebKitFormBoundarySSBxB9BodXqi4Y76
+Content-Disposition: form-data; name="authenticity_token"
+
+Y0akSsXbxOEd/oa/YqCsBMvIvQ4AP73ZeNl+lXEJ7Hg=
+------WebKitFormBoundarySSBxB9BodXqi4Y76
+Content-Disposition: form-data; name="issue[is_private]"
+
+0
+------WebKitFormBoundarySSBxB9BodXqi4Y76
+Content-Disposition: form-data; name="issue[tracker_id]"
+
+2
+------WebKitFormBoundarySSBxB9BodXqi4Y76
+Content-Disposition: form-data; name="issue[subject]"
+
+
+------WebKitFormBoundarySSBxB9BodXqi4Y76
+Content-Disposition: form-data; name="issue[description]"
+
+
+------WebKitFormBoundarySSBxB9BodXqi4Y76
+Content-Disposition: form-data; name="issue[status_id]"
+
+1
+------WebKitFormBoundarySSBxB9BodXqi4Y76
+Content-Disposition: form-data; name="issue[priority_id]"
+
+2
+------WebKitFormBoundarySSBxB9BodXqi4Y76
+Content-Disposition: form-data; name="issue[assigned_to_id]"
+
+182
+------WebKitFormBoundarySSBxB9BodXqi4Y76
+Content-Disposition: form-data; name="issue[category_id]"
+
+
+------WebKitFormBoundarySSBxB9BodXqi4Y76
+Content-Disposition: form-data; name="issue[fixed_version_id]"
+
+
+------WebKitFormBoundarySSBxB9BodXqi4Y76
+Content-Disposition: form-data; name="issue[parent_issue_id]"
+
+26823
+------WebKitFormBoundarySSBxB9BodXqi4Y76
+Content-Disposition: form-data; name="issue[start_date]"
+
+2017-10-23
+------WebKitFormBoundarySSBxB9BodXqi4Y76
+Content-Disposition: form-data; name="issue[due_date]"
+
+
+------WebKitFormBoundarySSBxB9BodXqi4Y76
+Content-Disposition: form-data; name="issue[estimated_hours]"
+
+
+------WebKitFormBoundarySSBxB9BodXqi4Y76
+Content-Disposition: form-data; name="issue[done_ratio]"
+
+0
+------WebKitFormBoundarySSBxB9BodXqi4Y76
+Content-Disposition: form-data; name="issue[custom_field_values][3]"
+
+
+------WebKitFormBoundarySSBxB9BodXqi4Y76
+Content-Disposition: form-data; name="attachments[dummy][file]"; filename=""
+Content-Type: application/octet-stream
+
+
+------WebKitFormBoundarySSBxB9BodXqi4Y76
+Content-Disposition: form-data; name="commit"
+
+创建
+------WebKitFormBoundarySSBxB9BodXqi4Y76--`
+    superagent.post("http://redmine.51tiangou.com/projects/tgou_project/issues")
+        .set("Cookie", cookie)       
+        .set('Content-Type', 'multipart/form-data; boundary=----WebKitFormBoundarySSBxB9BodXqi4Y76')
+        .send(data)
+        .end(function(err,res){
+            if (err) {
+                console.log("_________________",res)
+            }else{
+                console.log(res)
+            }
+        });
+}
+
+var detail = function detail(cookie,requirementList,callback){
+    console.log("cookie3",cookie)
+    superagent.get("http://redmine.51tiangou.com/projects/tgou_project/issues/new")
+        .set("Cookie", cookie)
+        .query({'issue[parent_issue_id]' : 26823 })
+        .query({'issue[tracker_id]' : 4 })
+        .end(function(err,res){
+            console.log(res.text)
+        });
+}
+
+var list = function list(list,callback){
+    console.log(list)
+    process.stdin.setEncoding('utf8');
+    process.stdin.resume();
+        process.stdin.on('data', function(chunk) {
+        process.stdin.emit('end',chunk)
+    }); 
+}
+
+process.stdin.on('end', function(chunk) {
+        console.log('输入的id是',chunk);
+
+});
 //主start程序
 // function start(){
 //     function onRequest(req, res){
@@ -204,8 +341,7 @@ var login = function login(token,cookie,utf8,callback){
 // }
 
 function start(){
-
-    async.waterfall([getToken,login],function(err,result){  
+    async.waterfall([getToken,login,page,addRequirement],function(err,result){  
       
         // if (err) {  
         //     console.log(err);  
