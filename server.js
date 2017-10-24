@@ -38,7 +38,6 @@ var getToken = function getToken(callback){
 }
 
 var login = function login(token,cookie,utf8,callback){
-    console.log("cookie1",cookie)
     superagent.post('http://redmine.51tiangou.com/login')
         .type('form')
         .redirects(0)
@@ -52,6 +51,7 @@ var login = function login(token,cookie,utf8,callback){
         .end(function(err,res){
             if (err) {
                 var cookie1 = res.header['set-cookie'][0];
+                    cookie1 = (cookie1.split(";"))[0];
                 //console.log("+++++++++++++++++++++++++++++++++++",res.header['set-cookie'][0]);
                 callback(null,cookie1)
             }else{
@@ -62,7 +62,6 @@ var login = function login(token,cookie,utf8,callback){
 }
 
 var page = function page(cookie,callback){
-    console.log("cookie2",cookie)
     superagent.get('http://redmine.51tiangou.com/my/page')
         .set("Cookie", cookie) 
         .end(function(err,res){
@@ -71,6 +70,7 @@ var page = function page(cookie,callback){
                 callback(null,res)  
             }else{
                  var cookie2 = res.header['set-cookie'][0];
+                     cookie2 = (cookie2.split(";"))[0];
                  var $ =  cheerio.load(res.text);
                  var requirementList= [];
                  $('.tracker').each(function(i, elem) {
@@ -84,116 +84,72 @@ var page = function page(cookie,callback){
                      }
                  });
                  requirementList.join(', ');
-                 callback(null,cookie2,requirementList)
+                 console.log("1111111111111111111111",cookie2)
+                 callback(null,cookie2)
             }
         })
 }
 
-var addRequirement = function addRequirement(cookie,requirementList,callback){
+var detail = function detail(cookie,callback){
+    var random = Math.random().toString(36).substr(2);
+    var cookiess = cookie;
+    console.log("22222222222222222222222",cookie)
+    superagent.get("http://redmine.51tiangou.com/projects/tgou_project/issues/new")
+        .set("Cookie", cookie)
+        // .redirects()
+        // .set("connection","keep-alive")
+        .query({'issue[parent_issue_id]' : 26823 })
+        .query({'issue[tracker_id]' : 4 })
+        .query({'random' : random })
+        .end(function(err,res){
+            var $ =  cheerio.load(res.text);
+            var token =  $('input[type="hidden"][name="authenticity_token"]').val();
+            //从response中得到cookie
+            console.log(res.header['set-cookie'])
+            // if (res.header['set-cookie']) {
+                var cookie = res.header['set-cookie'][0];
+                cookie = (cookie.split(";"))[0];
+                console.log("333333333333333333333333333333333333333333333333333333",cookie)
+                callback(null,cookie,token)
+            // }else{
+            //     console.log("elsessssssssssssssssssssssssssssssssss")
+            //     random = Math.random().toString(36).substr(2);
+            //     superagent.get("http://redmine.51tiangou.com/projects/tgou_project/issues/new")
+            //         .set("Cookie", cookiess)
+            //         .redirects(0)
+            //         .query({'issue[parent_issue_id]' : 26823 })
+            //         .query({'issue[tracker_id]' : 4 })
+            //         .query({'random' : random })
+            //         .end(function(err,res){
+            //             var cookie = res.header['set-cookie'][0];
+            //             cookie = (cookie.split(";"))[0];
+            //             console.log("--------------------------------------------------------------------",token,cookie)
+            //             callback(null,token,cookie)
+            //         })
+            // }
+            // console.log(token,cookie)
+            //callback(null,token,cookie)
+        });
+}
+
+var addRequirement = function addRequirement(cookie,token,callback){
     var str = '&#x2713;';
     var utf8 = entities.decode(str);
     //status_id 状态 priority_id 优先级 assigned_to_id 指向id category_id 类别 fixed_version_id 目标版本
-    var data = `------WebKitFormBoundarySSBxB9BodXqi4Y76
-Content-Disposition: form-data; name="utf8"
-
-${utf8}
-------WebKitFormBoundarySSBxB9BodXqi4Y76
-Content-Disposition: form-data; name="authenticity_token"
-
-Y0akSsXbxOEd/oa/YqCsBMvIvQ4AP73ZeNl+lXEJ7Hg=
-------WebKitFormBoundarySSBxB9BodXqi4Y76
-Content-Disposition: form-data; name="issue[is_private]"
-
-0
-------WebKitFormBoundarySSBxB9BodXqi4Y76
-Content-Disposition: form-data; name="issue[tracker_id]"
-
-2
-------WebKitFormBoundarySSBxB9BodXqi4Y76
-Content-Disposition: form-data; name="issue[subject]"
-
-
-------WebKitFormBoundarySSBxB9BodXqi4Y76
-Content-Disposition: form-data; name="issue[description]"
-
-
-------WebKitFormBoundarySSBxB9BodXqi4Y76
-Content-Disposition: form-data; name="issue[status_id]"
-
-1
-------WebKitFormBoundarySSBxB9BodXqi4Y76
-Content-Disposition: form-data; name="issue[priority_id]"
-
-2
-------WebKitFormBoundarySSBxB9BodXqi4Y76
-Content-Disposition: form-data; name="issue[assigned_to_id]"
-
-182
-------WebKitFormBoundarySSBxB9BodXqi4Y76
-Content-Disposition: form-data; name="issue[category_id]"
-
-
-------WebKitFormBoundarySSBxB9BodXqi4Y76
-Content-Disposition: form-data; name="issue[fixed_version_id]"
-
-
-------WebKitFormBoundarySSBxB9BodXqi4Y76
-Content-Disposition: form-data; name="issue[parent_issue_id]"
-
-26823
-------WebKitFormBoundarySSBxB9BodXqi4Y76
-Content-Disposition: form-data; name="issue[start_date]"
-
-2017-10-23
-------WebKitFormBoundarySSBxB9BodXqi4Y76
-Content-Disposition: form-data; name="issue[due_date]"
-
-
-------WebKitFormBoundarySSBxB9BodXqi4Y76
-Content-Disposition: form-data; name="issue[estimated_hours]"
-
-
-------WebKitFormBoundarySSBxB9BodXqi4Y76
-Content-Disposition: form-data; name="issue[done_ratio]"
-
-0
-------WebKitFormBoundarySSBxB9BodXqi4Y76
-Content-Disposition: form-data; name="issue[custom_field_values][3]"
-
-
-------WebKitFormBoundarySSBxB9BodXqi4Y76
-Content-Disposition: form-data; name="attachments[dummy][file]"; filename=""
-Content-Type: application/octet-stream
-
-
-------WebKitFormBoundarySSBxB9BodXqi4Y76
-Content-Disposition: form-data; name="commit"
-
-创建
-------WebKitFormBoundarySSBxB9BodXqi4Y76--`
+    // var data = '';
     superagent.post("http://redmine.51tiangou.com/projects/tgou_project/issues")
-        .set("Cookie", cookie)       
-        .set('Content-Type', 'multipart/form-data; boundary=----WebKitFormBoundarySSBxB9BodXqi4Y76')
-        .send(data)
+        .set("Cookie", cookie)      
+        .set('Content-Type', 'multipart/form-data')
+        .send('name=tj')
         .end(function(err,res){
             if (err) {
-                console.log("_________________",res)
+                console.log("*********************************",res)
             }else{
-                console.log(res)
+                console.log("++++++++++++++++++++++++++++++")
             }
         });
 }
 
-var detail = function detail(cookie,requirementList,callback){
-    console.log("cookie3",cookie)
-    superagent.get("http://redmine.51tiangou.com/projects/tgou_project/issues/new")
-        .set("Cookie", cookie)
-        .query({'issue[parent_issue_id]' : 26823 })
-        .query({'issue[tracker_id]' : 4 })
-        .end(function(err,res){
-            console.log(res.text)
-        });
-}
 
 var list = function list(list,callback){
     console.log(list)
@@ -341,7 +297,7 @@ process.stdin.on('end', function(chunk) {
 // }
 
 function start(){
-    async.waterfall([getToken,login,page,addRequirement],function(err,result){  
+    async.waterfall([getToken,login,page,detail,addRequirement],function(err,result){  
       
         // if (err) {  
         //     console.log(err);  
