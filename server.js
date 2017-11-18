@@ -32,8 +32,8 @@ var login = function login(token,cookie,utf8,callback){
         .redirects(0)
         .set('Content-Type', 'application/x-www-form-urlencoded')
         .set("Cookie", cookie)  
-        .send({username:"xuqiang"})
-        .send({password:"TEce@2017"})
+        .send({username:"shayi"})
+        .send({password:"shaYi123"})
         .send({back_url:"http://redmine.51tiangou.com/my/page"})
         .send({authenticity_token:token})
         .send({utf8:utf8})
@@ -72,7 +72,7 @@ var page = function page(cookie,callback){
                      }
                  });
                  requirementList.join(', ');
-                 console.log("1111111111111111111111",cookie2)
+                 console.log("1111111111111111111111",cookie2,requirementList)
                  callback(null,cookie2)
             }
         })
@@ -80,7 +80,7 @@ var page = function page(cookie,callback){
 
 var detail = function detail(cookie,callback){
     var random = Math.random().toString(36).substr(2);
-    superagent.get("http://redmine.51tiangou.com/projects/tgou_project/issues/new?issue[parent_issue_id]=26823&issue[tracker_id]=4")
+    superagent.get("http://redmine.51tiangou.com/projects/tgou_project/issues/new?issue[parent_issue_id]=27023&issue[tracker_id]=4")
         .set("Cookie", cookie)
         .redirects(0)
         // .set("connection","keep-alive")
@@ -95,7 +95,7 @@ var detail = function detail(cookie,callback){
                 var cookie = res.header['set-cookie'][0];
                 cookie = (cookie.split(";"))[0];
                 console.log("333333333333333333333333333333333333333333333333333333",cookie)
-                // callback(null,cookie,token)
+                callback(null,cookie,token)
         });
 }
 
@@ -117,14 +117,14 @@ var addRequirement = function addRequirement(cookie,token,callback){
         'authenticity_token' : token,
         // 'issue[is_private]' : 0,
         'issue[tracker_id]' : 2,
-        'issue[subject]' : '自动测试9',
+        'issue[subject]' : '商品详情页不显示“大商天狗承诺”入口',
         // 'issue[description]' : '',
         // 'issue[status_id]' : 1,
         // 'issue[priority_id]' : 2,
-        'issue[assigned_to_id]' : 122,
+        'issue[assigned_to_id]' : 40,
         // 'issue[category_id]' : 7,
-        'issue[fixed_version_id]' : 206,
-        'issue[parent_issue_id]' : 26823,
+        'issue[fixed_version_id]' : 228,
+        'issue[parent_issue_id]' : 27023,
         // 'issue[start_date]' : 2017-10-26,
         // 'issue[due_date]' : 2017-10-29,
         'issue[estimated_hours]' : 5,
@@ -140,33 +140,29 @@ var addRequirement = function addRequirement(cookie,token,callback){
         'commit' : '创建'
     };
     request.post({url: url, jar: j, formData: formData}, function optionalCallback(err, httpResponse, body) {
+        if (err) {
+            console.log('-------------------------', err);
+        }
       console.log('+++++++++++++++++++++++++++++++', body);
     });
 }
 
-
-var list = function list(list,callback){
-    console.log(list)
-    process.stdin.setEncoding('utf8');
-    process.stdin.resume();
-        process.stdin.on('data', function(chunk) {
-        process.stdin.emit('end',chunk)
-    }); 
-}
-
-process.stdin.on('end', function(chunk) {
-        console.log('输入的id是',chunk);
-
+  
+var httpServer=http.createServer(function(req,res){
+    async.waterfall([getToken,login,page],function(err,result){  
+          
+    })
 });
+httpServer.listen(3636);
 
 
-function start(){
-    async.waterfall([getToken,login,page,detail,addRequirement],function(err,result){  
+// function start(){
+//     // async.waterfall([getToken,login,page,detail,addRequirement],function(err,result){  
       
-        // if (err) {  
-        //     console.log(err);  
-        // }  
-       // console.log("result : "+result);  
-    })  
-}   
-exports.start= start;
+//     // })
+//     async.waterfall([getToken,login,page],function(err,result){  
+      
+//     })  
+//     http.createServer(start).listen(3896); 
+// }   
+// exports.start= start;
