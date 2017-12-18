@@ -325,3 +325,35 @@ app.post('/assignedBack',jsonParser,function(req,res){
        res.send(JSON.stringify(result));
   }) 
 })
+
+app.post('/web', jsonParser, function (req, res) {
+
+    var cookie = req.body.cookie;
+    superagent.get('http://redmine.51tiangou.com/issues')
+        .set("Cookie", cookie) 
+        .redirects(0)
+        .send({per_page:200})
+        .send({query_id:118})
+        .end(function(err,result){
+          var $ =  cheerio.load(result.text);
+          var requirementList= [];
+          $('.issues tbody').children("tr").each(function(i,elem){
+             var obj ={};
+             var dom = $(this).children("td");
+             if (dom.length>1) {
+                 obj.id = entities.decode(dom.eq(1).find('a').html())
+                 obj.author = entities.decode(dom.eq(2).find('a').html())
+                 obj.status = entities.decode(dom.eq(4).html())
+                 obj.subject = entities.decode(dom.eq(6).find('a').html())
+                 obj.assigned_to = entities.decode(dom.eq(7).find('a').html())
+                 obj.version = entities.decode(dom.eq(9).find('a').html())
+                 requirementList.push(obj);
+             }
+          })
+          requirementList.join(', ');
+           var objData = {
+              data:requirementList
+           }
+          res.send(JSON.stringify(objData));
+        })
+});

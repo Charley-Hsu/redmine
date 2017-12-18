@@ -1,7 +1,7 @@
 <template>
     <div class="bg_wrap" style="padding: 20px;">
         <div class="logo_head" style="height:80px;">
-            <div class="float-left">
+            <div class="float-left" @click="gohome">
                 <img src="../img/logo.png"width="226" alt="">
             </div>
             <div class="float-right">
@@ -195,7 +195,8 @@ export default {
     },
     gohome:function(){
         var that = this;
-        that.$router.push({path: '/'})
+        // that.$router.push({path: '/'})
+        that.$router.push({path: '/webRequment',query:{cookie: this.cookie}})
     }
   }
 }
