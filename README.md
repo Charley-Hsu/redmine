@@ -22,6 +22,9 @@ $ npm install --save sequelize
 # And the following:
 $ npm install --save mysql2
 
+$ npm install --g sequelize mysql
+$ npm install --g sequelize-auto 
+
 ```
  Error: Cannot resolve module 'net' on node_modules/joi/lib @ ./~/joi/lib/string.js 3:10-24
 ``` bash
