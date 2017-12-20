@@ -1,5 +1,5 @@
 import db from '../config/db.js' // 引入user的表结构
-const userModel = '../schema/user.js'
+const userModel = '../schema/users.js'
 const RedmineDb = db.Redmine // 引入数据库
 
 const User = RedmineDb.import(userModel) // 用sequelize的import方法引入表结构，实例化了User。
@@ -17,7 +17,7 @@ const getUserById = async function (id) { // 注意是async function 而不是fu
 const getUserByName = async function (name) {
   const userInfo = await User.findOne({
     where: {
-      user_name: name
+      login: name
     }
   })
 

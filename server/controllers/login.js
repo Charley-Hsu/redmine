@@ -11,23 +11,33 @@ const postUserAuth = async function (ctx) {
   const data = ctx.request.body // post过来的数据存在request.body里
   const userInfo = await user.getUserByName(data.name)
   if (userInfo != null) { // 如果查无此用户会返回null
-    if (userInfo.password!=data.password) {
-      ctx.body = {
-        success: false, // success标志位是方便前端判断返回是正确与否
-        info: '密码错误！'
-      }
-    } else {
-      const userToken = {
-        name: userInfo.user_name,
-        id: userInfo.id
-      }
-      const secret = 'vue-koa-demo' // 指定密钥
-      const token = jwt.sign(userToken, secret) // 签发token
-      ctx.body = {
-        success: true,
-        token: token // 返回token
-      }
+    const userToken = {
+      name: userInfo.login,
+      id: userInfo.id
     }
+    const secret = 'vue-koa-demo' // 指定密钥
+    const token = jwt.sign(userToken, secret) // 签发token
+    ctx.body = {
+      success: true,
+      token: token // 返回token
+    }
+    // if (userInfo.password!=data.password) {
+    //   ctx.body = {
+    //     success: false, // success标志位是方便前端判断返回是正确与否
+    //     info: '密码错误！'
+    //   }
+    // } else {
+    //   const userToken = {
+    //     name: userInfo.user_name,
+    //     id: userInfo.id
+    //   }
+    //   const secret = 'vue-koa-demo' // 指定密钥
+    //   const token = jwt.sign(userToken, secret) // 签发token
+    //   ctx.body = {
+    //     success: true,
+    //     token: token // 返回token
+    //   }
+    // }
   } else {
     ctx.body = {
       success: false,
