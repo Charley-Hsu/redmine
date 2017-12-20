@@ -86,7 +86,7 @@
                 type: 'success',
                 message: '登录成功！'
               })
-              //this.$router.push('/search') // 进入content页面，登录成功
+              this.$router.push('/redmine') // 进入content页面，登录成功
             }
           }, (err) => {
             this.$message.error('请求错误！')

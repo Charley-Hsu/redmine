@@ -98,7 +98,7 @@
       getUserInfo: function () {
         const token = sessionStorage.getItem('demo-token')
         if (token != null && token !== 'null') {
-          let decode = jwt.verify(token, 'vue-koa-demo')
+          let decode = jwt.verify(token, 'tgfe')
           return decode
         } else {
           return null

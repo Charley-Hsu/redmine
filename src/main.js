@@ -11,6 +11,7 @@ Vue.use(VueRouter)
 Vue.use(Echarts)
 import Login from './components/Login'
 import Search from './components/Search'
+import Redmine from './components/Redmine'
 import MapDemo from './components/MapDemo'
 import UiDemo from './components/ContentDemo'
 
@@ -30,19 +31,23 @@ const router = new VueRouter({
     path: '/content',
     component: UiDemo
   }, {
+    path: '/redmine',
+    component: Redmine
+  }, {
     path: '*',
     redirect: '/' // 输入其他不存在的地址自动跳回首页
   }]
 })
 router.beforeEach((to, from, next) => {
-  const token = sessionStorage.getItem('demo-token')
+  const token = sessionStorage.getItem('token')
   if (to.path === '/') { // 如果是跳转到登录页的
     if (token !== 'null' && token !== null) {
-      next('/search') // 如果有token就转向Search不返回登录页
+      next('/redmine') // 如果有token就转向Search不返回登录页
     }
     next() // 否则跳转回登录页
   } else {
     if (token !== 'null' && token !== null) {
+      Vue.prototype.$http.defaults.headers['Content-Type'] = 'application/x-www-form-urlencoded';
       Vue.prototype.$http.defaults.headers.common['Authorization'] = 'Bearer ' + token // 注意Bearer后有个空格
       next() // 如果有token就正常转向
     } else {

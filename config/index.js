@@ -33,8 +33,11 @@ module.exports = {
           changeOrigin: true
         },
         '/api':{
-          target: 'http://localhost:8889',
-          changeOrigin: true
+          target: 'http://redmine.51tiangou.com',
+          changeOrigin: true,
+          pathRewrite: {
+            '^/api': ''
+          }
         }
       },
         // CSS Sourcemaps off by default because relative paths are "buggy"
