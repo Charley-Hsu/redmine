@@ -33,10 +33,14 @@ module.exports = {
           changeOrigin: true
         },
         '/api':{
+          target: 'http://localhost:8889',
+          changeOrigin: true
+        },
+        '/rm':{
           target: 'http://redmine.51tiangou.com',
           changeOrigin: true,
           pathRewrite: {
-            '^/api': ''
+            '^/rm': ''
           }
         }
       },

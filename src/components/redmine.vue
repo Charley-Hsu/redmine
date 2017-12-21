@@ -45,32 +45,45 @@
                         <div style="margin-bottom:20px;">
                             <span style="color:#4a4a4a">需求名称</span>
                         </div>
-                        <div class="flex-container" style="border-radius: 4px;border: solid 1px rgba(221, 221, 221, 1);padding:0 17px; ">
-                            <input class="title_input flex1" v-model="subject" type="text" name="title" :placeholder="placeholder">
-                            <img src="../img/edit-icon.png" width="24" class="float-right" alt="">
-                        </div>
+                        <el-input
+                          :placeholder="placeholder"
+                          v-model="subject"
+                          clearable>
+                        </el-input>
                     </div>
                     <div style="margin-top:20px;">
                         <div style="margin-bottom:20px;">
                             <span style="color:#4a4a4a">目标版本</span>
                         </div>
-                        <div class="flex-container" style="border-radius: 4px;border: solid 1px rgba(221, 221, 221, 1);">
-                            <select v-model="selected" class="flex1">
-                                 <option v-for="item in options" v-bind:value="item.id">
-                                     {{item.text}}
-                                 </option>
-                             </select>
-                        </div>
+                        <el-select v-model="selected" placeholder="请选择目标版本" style="width:100%">
+                          <el-option
+                            v-for="item in options"
+                            :key="item.id"
+                            :label="item.name"
+                            :value="item.id"
+                            :disabled="item.disabled">
+                          </el-option>
+                        </el-select>
                     </div>
-<!--                     <div style="margin-top:20px;">
+                    <div style="margin-top:20px;">
                         <div style="margin-bottom:20px;">
                             <span style="color:#4a4a4a">指派同学</span>
                         </div>
-                        <div class="flex-container" style="border-radius: 4px;border: solid 1px rgba(221, 221, 221, 1);">
+                        <el-select v-model="numbers" multiple filterable placeholder="请输入指派同学姓名 如“天狗”" style="width:100%">
+                          <el-option
+                            v-for="item in nameList"
+                            :key="item.id"
+                            :label="item.login"
+                            :value="item.id">
+                            <span style="float: left">{{ item.login }}</span>
+                            <span style="float: right; color: #8492a6; font-size: 13px">{{ item.lastname }}{{ item.firstname }}</span>
+                          </el-option>
+                        </el-select>
+<!--                         <div class="flex-container" style="border-radius: 4px;border: solid 1px rgba(221, 221, 221, 1);">
                             <v-select multiple v-model="numbers" :options="nameList" class="flex1" placeholder="请输入指派同学姓名 如“天狗”"></v-select>
                             <img src="../img/zoom-out-icon.png" width="24" style="position:absolute;right:37px;" alt="">
-                        </div>
-                    </div> -->
+                        </div> -->
+                    </div>
                     <div>
                         <button type="submit" :style="selected&&numbers?'':'background-color:#cccccc'" class="submit-btn" @click="submit()">完成</button>
                     </div>
@@ -86,7 +99,6 @@
     created: function () {
       const userInfo = this.getUserInfo()
       if (userInfo !== null) {
-        console.log(userInfo)
         this.id = userInfo.id
         this.token = userInfo.token
       } else {
@@ -117,7 +129,10 @@
         pmer:'',
         requirement_number:'',
         requirement_text:'',
-        active_item:''
+        active_item:'',
+        offset:0,
+        count:1,
+        total_count:0
       }
     },
     methods: {
@@ -131,13 +146,21 @@
         }
       },
       getRequmentList: function () {
-        this.$http.get('/api/issues.xml?assigned_to_id=182&key=c9047f7a95e79e8240cb1eeb788f68298839b128')
+        this.$http.get('/rm/issues.xml',{
+          headers: {
+            'X-Redmine-API-Key': this.token,
+            'Content-Type':'application/xml'
+          },
+          params:{
+               // key: this.token,
+               assigned_to_id:this.id
+          }
+        })
           .then((res) => {
             if (res.status === 200) {
-                var parseString = xml2js.parseString;
-                parseString(res.data,  { explicitArray : false, ignoreAttrs : true },function (err, result) {
-                  console.log(res)
-                  console.log(JSON.stringify(result))
+                var xmlParser = new xml2js.Parser({ explicitArray : false, mergeAttrs : true });
+                xmlParser.parseString(res.data,(err, result) => {
+                    this.list = result.issues.issue;
                 });
             } else {
               this.$message.error('获取列表失败！')
@@ -145,48 +168,214 @@
           }, (err) => {
             this.$message.error(err)
           })
-        
-        // this.$http.get('/api/requmentList/' + this.id)
-        //   .then((res) => {
-        //     if (res.status === 200) {
-        //       this.list = res.data.data
-        //     } else {
-        //       this.$message.error('获取列表失败！')
+      },
+      checked:function (item){
+          this.numbers = [];
+          this.active_item = item;
+          this.placeholder = item.subject;
+          this.subject = item.subject;
+          this.pmer = item.author.name;
+          this.requirement_number = item.id;
+          this.requirement_text = item.subject;
+          this.$http.get('/rm/projects/17/versions.xml', {
+            headers: {
+              'X-Redmine-API-Key': this.token,
+              'Content-Type':'application/xml'
+            },
+            })
+          .then((res) => {
+            if (res.status === 200) {
+                var xmlParser = new xml2js.Parser({ explicitArray : false, mergeAttrs : true });
+                xmlParser.parseString(res.data,(err, result) => {
+                    this.options = result.versions.version.slice(-15);
+                    // console.log(this.options)
+                    let defaultOp = {
+                      id:206,
+                      name:'未定版本专用'
+                    }
+                    this.options.push(defaultOp)
+                });
+            } else {
+              this.$message.error('获取版本信息失败！')
+            }
+          }, (err) => {
+            this.$message.error(err)
+          })
+          this.$http.get('/rm/users.xml', {
+              headers: {
+                'X-Redmine-API-Key': '9f48a0f107ecd272dd7b3ca603d9d8e94335c39f',
+                'Content-Type':'application/xml'
+              },
+                params:{
+                     //key: '9f48a0f107ecd272dd7b3ca603d9d8e94335c39f', //需要管理员权限，用了运维的账号获取人员列表
+                     limit:50,
+                     offset:0
+                }
+            })
+          .then((res) => {
+                var xmlParser = new xml2js.Parser({ explicitArray : false, mergeAttrs : true });
+                xmlParser.parseString(res.data,(err, result) => {
+                    this.nameList = this.nameList.concat(result.users.user);
+                    this.total_count = result.users.total_count;
+                });
+                if (this.total_count) {
+                    this.getUsers(this.offset)//循环获取人员列表
+                } else {
+                  this.$message.error('获取人员信息失败！')
+                }
+          }, (err) => {
+            this.$message.error(err)
+          })
+      },
+      getUsers:function (offset){
+        for(this.count; this.count * 50 <this.total_count; this.count++){
+          this.$http.get('/rm/users.xml', {
+              headers: {
+                'X-Redmine-API-Key': '9f48a0f107ecd272dd7b3ca603d9d8e94335c39f',
+                'Content-Type':'application/xml'
+              },
+                params:{
+                     //key: '9f48a0f107ecd272dd7b3ca603d9d8e94335c39f', //需要管理员权限，用了运维的账号获取人员列表
+                     limit:50,
+                     offset:50*this.count
+                }
+            })
+
+          .then((res) => {
+                var xmlParser = new xml2js.Parser({ explicitArray : false, mergeAttrs : true });
+                xmlParser.parseString(res.data,(err, result) => {
+                    this.nameList = this.nameList.concat(result.users.user);
+                    console.log(this.total_count,this.count,this.offset)
+                });
+          }, (err) => {
+            this.$message.error(err)
+          })
+        }
+      },
+      submit:function () {
+        if (this.selected&&this.numbers) {
+          let that = this;
+          // console.log(this.selected,this.subject,this.numbers,this.requirement_number)
+          this.numbers.forEach( function(element, index) {
+            that.createIssue(that.numbers[index])
+          });
+        } else {
+            alert("请输入必要信息")
+        }
+      },
+      createIssue:function (id) {
+        let url = '/rm/issues.json';
+        // let data = {
+        //       "issue": {
+        //         "tracker_id":2,//跟踪：2->功能
+        //         "subject": 'subject',
+        //         "priority_id":2,//优先级：2->普通
+        //         "custom_field_values":'web',//模块
+        //         "fixed_version_id":206,//版本号
+        //         "assigned_to_id":182,//指给人员
+        //         "parent_issue_id":26823 //父需求
+        //       } 
+        // }
+        // let data = 
+        // {
+        //     "issue":
+        //     {
+        //         "tracker":
+        //         {
+        //             "id": 2,
+        //             "name": "功能"
+        //         },
+        //         "project":
+        //         {
+        //             "id": 4
+        //         },
+        //         "subject": "kuaikul",
+        //         "status":
+        //         {
+        //             "id": 1
+        //         },
+        //         "assigned_to":
+        //         {
+        //             "id": 182
+        //         },
+        //         "priority":
+        //         {
+        //             "id": 2
+        //         },
+        //         "fixed_version":
+        //         {
+        //             "id": 206
+        //         },
+        //         "parent":
+        //         {
+        //             "id": 26823
+        //         },
+        //         "custom_fields": [
+        //         {
+        //             "id": 3,
+        //             "value": "web"
+        //         }]
         //     }
-        //   }, (err) => {
-        //     this.$message.error(err)
-        //   })
+        
+        let data1 = {
+          "issue":{
+            "project":
+            {
+                "id": 4,
+                "name": "天狗网前端"
+            },
+            "tracker":
+            {
+                "id": 2,
+                "name": "功能"
+            },
+            "status":
+            {
+                "id": 1,
+                "name": "新建"
+            },
+            "priority":
+            {
+                "id": 2,
+                "name": "普通"
+            },
+            "author":
+            {
+                "id": 182,
+                "name": "徐 强"
+            },
+            "assigned_to":
+            {
+               "id": 182,
+               "name": "徐 强"
+            },
+            "parent":
+            {
+                "id": 26823
+            },
+            "subject": "aaaaaaaa",
+            "description": "",
+            "done_ratio": 0
+          }
+        }
+        let headers = {
+              'X-Redmine-API-Key': this.token,
+              'Content-Type':'application/json'
+        }
+        this.$http.post(url,data1,{headers:headers})
+          .then(function (res) {
+            this.selected = '';
+            this.numbers = '';
+            this.$message.success("分配成功")
+          })
+          .catch(function (error) {
+            this.$message.error(id,error)
+          });
       }
     }
   }
 </script>
 <style scoped>
-select{
-    border:0;
-    appearance:none;  
-    -moz-appearance:none;  
-    -webkit-appearance:none;  
-    background: url("../img/arrow-down-1-icon.png") no-repeat scroll right center transparent;   
-    background-size:24px;
-    padding: 0 17px; 
-    margin-right: 17px;
-    line-height: 42px;
-}
-option:focus{
-    background-color: rgba(0, 146, 255, 0.5);
-}
-input::-webkit-input-placeholder { /* WebKit browsers*/ 
-　　margin-left:15px;font-size: 14px;color: #bababa;
-}
-input:-moz-placeholder {  /* Mozilla Firefox 4 to 18*/ 
-　　margin-left:15px;font-size: 14px;color: #bababa;
-}
-input::-moz-placeholder {  /* Mozilla Firefox 19+*/ 
-　　margin-left:15px;font-size: 14px;color: #bababa;
-}
-input:-ms-input-placeholder { /* Internet Explorer 10+*/ 
-　　margin-left:15px;font-size: 14px;color: #bababa;
-}
 .bg_wrap{
     position: absolute;
     left: 0;
@@ -219,11 +408,6 @@ input:-ms-input-placeholder { /* Internet Explorer 10+*/
     margin-top: 20px;
     padding: 20px;
     position: relative;
-}
-.title_input{
-    color:#666666;
-    line-height: 42px;
-    height: 42px;
 }
 .link_icon{
     position: absolute;
