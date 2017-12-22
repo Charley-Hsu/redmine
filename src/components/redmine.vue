@@ -18,6 +18,8 @@
                     <div class="list_item" @click="checked(item)" :class="{active_item: active_item == item}">
                         <div style="margin-bottom:20px;">
                             <span class="fs-14" style="font-weight: bold;">#{{item.id}}</span>
+                            <el-tag type="danger" style="height:20px;line-height:20px;margin-left:10px;" v-if="item.tracker">{{item.tracker.name}}</el-tag>
+                            <el-tag type="success" style="height:20px;line-height:20px;margin-left:10px;" v-if="item.status">{{item.status.name}}</el-tag>
                         </div>
                         <div>
                             <span class="fs-12">{{item.subject}}</span>
@@ -79,10 +81,6 @@
                             <span style="float: right; color: #8492a6; font-size: 13px">{{ item.lastname }}{{ item.firstname }}</span>
                           </el-option>
                         </el-select>
-<!--                         <div class="flex-container" style="border-radius: 4px;border: solid 1px rgba(221, 221, 221, 1);">
-                            <v-select multiple v-model="numbers" :options="nameList" class="flex1" placeholder="请输入指派同学姓名 如“天狗”"></v-select>
-                            <img src="../img/zoom-out-icon.png" width="24" style="position:absolute;right:37px;" alt="">
-                        </div> -->
                     </div>
                     <div>
                         <button type="submit" :style="selected&&numbers?'':'background-color:#cccccc'" class="submit-btn" @click="submit()">完成</button>
@@ -90,6 +88,18 @@
                 </div>
             </div>
         </div>
+        <el-button type="primary" v-if="loading">
+        </el-button>
+        <el-dialog
+          title="提示"
+          :visible.sync="dialogVisible"
+          width="30%">
+          <span>是否将该宣讲指回PM，并设置为已分配？</span>
+          <span slot="footer" class="dialog-footer">
+            <el-button @click="dialogVisible = false">取 消</el-button>
+            <el-button type="primary" @click="assignedBack()">确 定</el-button>
+          </span>
+        </el-dialog>
     </div>
 </template>
 <script>
@@ -113,6 +123,9 @@
     },
     data: function () {
       return {
+        loading:false,
+        dialogVisible:false,
+        loadingType:'',
         id:'',
         token:'',
         placeholder:'',
@@ -127,6 +140,7 @@
         numberOpition:{},
         selected:'',
         pmer:'',
+        pmid:'',
         requirement_number:'',
         requirement_text:'',
         active_item:'',
@@ -146,35 +160,35 @@
         }
       },
       getRequmentList: function () {
-        this.$http.get('/rm/issues.xml',{
+        this.$http.get('/rm/issues.json',{
           headers: {
             'X-Redmine-API-Key': this.token,
-            'Content-Type':'application/xml'
+            'Content-Type':'application/json'
           },
           params:{
-               // key: this.token,
                assigned_to_id:this.id
           }
         })
           .then((res) => {
-            if (res.status === 200) {
-                var xmlParser = new xml2js.Parser({ explicitArray : false, mergeAttrs : true });
-                xmlParser.parseString(res.data,(err, result) => {
-                    this.list = result.issues.issue;
-                });
-            } else {
-              this.$message.error('获取列表失败！')
-            }
+              this.list = res.data.issues;
+                // var xmlParser = new xml2js.Parser({ explicitArray : false, mergeAttrs : true });
+                // xmlParser.parseString(res.data,(err, result) => {
+                //     this.list = result.issues.issue;
+                //     console.log(this.list)
+                // });
           }, (err) => {
             this.$message.error(err)
           })
       },
       checked:function (item){
           this.numbers = [];
+          this.nameList=[];
+          this.options = [];
           this.active_item = item;
           this.placeholder = item.subject;
           this.subject = item.subject;
           this.pmer = item.author.name;
+          this.pmid = item.author.id;
           this.requirement_number = item.id;
           this.requirement_text = item.subject;
           this.$http.get('/rm/projects/17/versions.xml', {
@@ -208,7 +222,7 @@
               },
                 params:{
                      //key: '9f48a0f107ecd272dd7b3ca603d9d8e94335c39f', //需要管理员权限，用了运维的账号获取人员列表
-                     limit:50,
+                     limit:100,
                      offset:0
                 }
             })
@@ -228,7 +242,7 @@
           })
       },
       getUsers:function (offset){
-        for(this.count; this.count * 50 <this.total_count; this.count++){
+        for(this.count; this.count * 100 <this.total_count; this.count++){
           this.$http.get('/rm/users.xml', {
               headers: {
                 'X-Redmine-API-Key': '9f48a0f107ecd272dd7b3ca603d9d8e94335c39f',
@@ -236,8 +250,8 @@
               },
                 params:{
                      //key: '9f48a0f107ecd272dd7b3ca603d9d8e94335c39f', //需要管理员权限，用了运维的账号获取人员列表
-                     limit:50,
-                     offset:50*this.count
+                     limit:100,
+                     offset:100*this.count
                 }
             })
 
@@ -256,6 +270,13 @@
         if (this.selected&&this.numbers) {
           let that = this;
           // console.log(this.selected,this.subject,this.numbers,this.requirement_number)
+          this.loadingType = this.$loading({
+            lock: true,
+            text: '正在为您拆分，请稍后',
+            spinner: 'el-icon-loading',
+            background: 'rgba(0, 0, 0, 0.7)'
+          });
+          this.loading = false;
           this.numbers.forEach( function(element, index) {
             that.createIssue(that.numbers[index])
           });
@@ -265,112 +286,68 @@
       },
       createIssue:function (id) {
         let url = '/rm/issues.json';
-        // let data = {
-        //       "issue": {
-        //         "tracker_id":2,//跟踪：2->功能
-        //         "subject": 'subject',
-        //         "priority_id":2,//优先级：2->普通
-        //         "custom_field_values":'web',//模块
-        //         "fixed_version_id":206,//版本号
-        //         "assigned_to_id":182,//指给人员
-        //         "parent_issue_id":26823 //父需求
-        //       } 
-        // }
-        // let data = 
-        // {
-        //     "issue":
-        //     {
-        //         "tracker":
-        //         {
-        //             "id": 2,
-        //             "name": "功能"
-        //         },
-        //         "project":
-        //         {
-        //             "id": 4
-        //         },
-        //         "subject": "kuaikul",
-        //         "status":
-        //         {
-        //             "id": 1
-        //         },
-        //         "assigned_to":
-        //         {
-        //             "id": 182
-        //         },
-        //         "priority":
-        //         {
-        //             "id": 2
-        //         },
-        //         "fixed_version":
-        //         {
-        //             "id": 206
-        //         },
-        //         "parent":
-        //         {
-        //             "id": 26823
-        //         },
-        //         "custom_fields": [
-        //         {
-        //             "id": 3,
-        //             "value": "web"
-        //         }]
-        //     }
-        
-        let data1 = {
-          "issue":{
-            "project":
-            {
-                "id": 4,
-                "name": "天狗网前端"
-            },
-            "tracker":
-            {
-                "id": 2,
-                "name": "功能"
-            },
-            "status":
-            {
-                "id": 1,
-                "name": "新建"
-            },
-            "priority":
-            {
-                "id": 2,
-                "name": "普通"
-            },
-            "author":
-            {
-                "id": 182,
-                "name": "徐 强"
-            },
-            "assigned_to":
-            {
-               "id": 182,
-               "name": "徐 强"
-            },
-            "parent":
-            {
-                "id": 26823
-            },
-            "subject": "aaaaaaaa",
-            "description": "",
-            "done_ratio": 0
-          }
-        }
         let headers = {
               'X-Redmine-API-Key': this.token,
               'Content-Type':'application/json'
         }
-        this.$http.post(url,data1,{headers:headers})
-          .then(function (res) {
-            this.selected = '';
+        this.$http.post(url,{
+          "issue": {
+            "project_id": 4,
+            "tracker_id":2,//跟踪：2->功能
+            "status_id":1,
+            "subject": this.subject,
+            "priority_id": 2,//优先级：2->普通
+            "fixed_version_id":this.selected,//版本号
+            "assigned_to_id":id,//指给人员
+            "parent_issue_id":this.requirement_number,//父需求
+            //"category_id":7,//类别
+            "custom_fields": [
+              {
+                "id": 3,
+                "name": "模块",//模块
+                "value": "web"
+              }
+            ],
+          }
+        },{headers:headers})
+          .then((res) => {
             this.numbers = '';
-            this.$message.success("分配成功")
+            this.loadingType.close();
+            this.loading = false;
+            this.$message.success("一条功能设置成功");
+            this.dialogVisible =true;
+          }, 
+          (err) => {
+            this.$message.error(err)
+            this.loadingType.close();
+            this.loading = false;
           })
-          .catch(function (error) {
-            this.$message.error(id,error)
-          });
+      },
+      assignedBack:function () {
+        let url = '/rm/issues/'+this.requirement_number+'.json';
+        let headers = {
+              'X-Redmine-API-Key': this.token,
+              'Content-Type':'application/json'
+        }
+        this.$http.put(url,{
+          "issue": {
+            "project_id": 4,
+            "status_id":14,
+            "priority_id": 2,//优先级：2->普通
+            "fixed_version_id":this.selected,//版本号
+            "assigned_to_id":this.pmid//指给人员
+          }
+        },{headers:headers})
+          .then((res) => {
+            this.selected = '';
+            this.$message.success("指回成功");
+            this.dialogVisible =false;
+          }, 
+          (err) => {
+            this.selected = '';
+            this.$message.error(err)
+            this.dialogVisible =false;
+          })
       }
     }
   }

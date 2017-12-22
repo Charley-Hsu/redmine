@@ -48,7 +48,7 @@ router.beforeEach((to, from, next) => {
   } else {
     if (token !== 'null' && token !== null) {
       // Vue.prototype.$http.defaults.headers['X-Redmine-API-Key'] = 'c9047f7a95e79e8240cb1eeb788f68298839b128';
-      // Vue.prototype.$http.defaults.headers.common['Authorization'] = 'Bearer ' + token // 注意Bearer后有个空格
+      Vue.prototype.$http.defaults.headers.common['Authorization'] = 'Bearer ' + token // 注意Bearer后有个空格
       next() // 如果有token就正常转向
     } else {
       next('/') // 否则跳转回登录页
