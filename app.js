@@ -3,7 +3,7 @@ import json from 'koa-json'
 import logger from 'koa-logger'
 import auth from './server/routes/auth.js'
 import api from './server/routes/api.js'
-import rm from './server/routes/rm.js'
+// import rm from './server/routes/rm.js'
 import jwt from 'koa-jwt'
 import path from 'path'
 import xml2js from 'xml2js'
@@ -48,7 +48,7 @@ app.on('error', function (err, ctx) {
 })
 
 router.use('/auth', auth.routes()) // 挂载到koa-router上，同时会让所有的auth的请求路径前面加上'/auth'的请求路径。
-router.use('/rm', rm.routes()) 
+// router.use('/rm', rm.routes()) 
 router.use("/api",jwt({secret: 'tgfe'}),api.routes()) // 所有走/api/打头的请求都需要经过jwt验证。
 
 app.use(router.routes()) // 将路由规则挂载到Koa上。

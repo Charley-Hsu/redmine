@@ -10,10 +10,9 @@ Vue.use(ElementUI) // vue全局设置
 Vue.use(VueRouter)
 Vue.use(Echarts)
 import Login from './components/Login'
-import Search from './components/Search'
 import Redmine from './components/Redmine'
-import MapDemo from './components/MapDemo'
-import UiDemo from './components/ContentDemo'
+import Maps from './components/map'
+import Top from './components/topMap'
 
 const router = new VueRouter({
   mode: 'history',
@@ -22,17 +21,14 @@ const router = new VueRouter({
     path: '/', // 默认首页打开是登录页
     component: Login
   }, {
-    path: '/search',
-    component: Search
-  }, {
     path: '/map',
-    component: MapDemo
-  }, {
-    path: '/content',
-    component: UiDemo
-  }, {
+    component: Maps
+  },{
     path: '/redmine',
     component: Redmine
+  }, {
+    path: '/top',
+    component: Top
   }, {
     path: '*',
     redirect: '/' // 输入其他不存在的地址自动跳回首页
