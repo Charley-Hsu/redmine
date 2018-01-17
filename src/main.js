@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import App from './App'
 import ElementUI from 'element-ui'
-import 'element-ui/lib/theme-default/index.css'
+import 'element-ui/lib/theme-chalk/index.css'
 import Echarts from 'echarts'
 import VueRouter from 'vue-router'
 import Axios from 'axios'

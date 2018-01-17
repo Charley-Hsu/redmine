@@ -14,8 +14,13 @@
                     <img src="../img/folder-opened-icon.png" width="24" alt="">
                     <span class="fs-14" style="padding-left:10px;">需求列表</span>
                 </div>
-                <div style="margin-top:20px;" class="bg-white" v-for="item in list" >
-                    <div class="list_item" @click="checked(item)" :class="{active_item: active_item == item}">
+                <div style="margin-top:20px;" class="bg-white" >
+                  <el-tabs v-model="activeName" type="card" @tab-click="handleClick">
+                    <el-tab-pane label="需求" name="4"></el-tab-pane>
+                    <el-tab-pane label="功能" name="2"></el-tab-pane>
+                    <el-tab-pane label="错误" name="1"></el-tab-pane>
+                  </el-tabs>
+                    <div class="list_item" @click="checked(item)" :class="{active_item: active_item == item}" v-for="item in list">
                         <div style="margin-bottom:20px;">
                             <span class="fs-14" style="font-weight: bold;">#{{item.id}}</span>
                             <el-tag type="danger" style="height:20px;line-height:20px;margin-left:10px;" v-if="item.tracker">{{item.tracker.name}}</el-tag>
@@ -31,7 +36,7 @@
                     </div>
                 </div>
             </div>
-            <div class="submit_content flex2">
+            <div class="submit_content flex2" v-if="this.activeName > 0">
                 <div class="flex-container">
                     <div class="flex1 fs-18">
                         <img src="../img/document-text-icon.png" width="24" alt="">
@@ -39,7 +44,7 @@
                     </div>
                     <div style="float-right">
                         <img src="../img/user-icon.png" width="24" alt="">
-                        <span class="fs-14" style="padding-left:10px;color:#000000;" v-if="pmer">PM {{pmer}}</span>
+                        <span class="fs-14" style="padding-left:10px;color:#000000;" v-if="pmer">来源 {{pmer}}</span>
                     </div>
                 </div>
                 <div class="bg-white submit_detail fs-14">
@@ -67,6 +72,35 @@
                           </el-option>
                         </el-select>
                     </div>
+                    <!-- 功能模块专属 -->
+                    <div style="margin-top:20px;" v-if="activeName == 2">
+                      <div style="margin-bottom:20px;">
+                          <span style="color:#4a4a4a">完成情况</span>
+                      </div>
+                      <div>
+                        <div style="width:80%;float:left;">
+                          <el-slider
+                            v-model="percent"
+                            :step="10">
+                          </el-slider>
+                        </div>
+                        
+                        <el-dropdown style="width:20%;padding-left:10px" size="small">
+                          <el-button type="primary">
+                            状态选择<i class="el-icon-arrow-down el-icon--right"></i>
+                          </el-button>
+                          <el-dropdown-menu slot="dropdown">
+                            <el-dropdown-item>进行中</el-dropdown-item>
+                            <el-dropdown-item>已解决待发布</el-dropdown-item>
+                            <el-dropdown-item>待验证</el-dropdown-item>
+                            <el-dropdown-item>反馈</el-dropdown-item>
+                            <el-dropdown-item>测试通过</el-dropdown-item>
+                            <el-dropdown-item>无需处理</el-dropdown-item>
+                          </el-dropdown-menu>
+                        </el-dropdown>
+                      </div>
+                    </div>
+
                     <div style="margin-top:20px;">
                         <div style="margin-bottom:20px;">
                             <span style="color:#4a4a4a">指派同学</span>
@@ -87,9 +121,23 @@
                     </div>
                 </div>
             </div>
+            <!-- 未选择功能项目加载 -->
+            <div class="submit_content flex2 center text-center" v-else>
+              <div>
+                <span>
+                  请点击选择左边TAB项，或者点击下方按钮进入2017年度总结
+                </span>
+              </div>
+              <el-button type="primary" style="margin-top:20px;" @click="goMap()">2017<i class="el-icon-upload el-icon-date"></i>
+              </el-button>
+            </div>
+              <textarea @onpaste ="paste()" style="width:500px;height:500px">
+              </textarea>
         </div>
+       <!--  loading显示 -->
         <el-button type="primary" v-if="loading">
         </el-button>
+        <!-- 已分配回调显示 -->
         <el-dialog
           title="提示"
           :visible.sync="dialogVisible"
@@ -116,6 +164,12 @@
         this.token = ''
       }
       this.getRequmentList()//获取需求列表
+      this.$message({
+        dangerouslyUseHTMLString: true,
+        duration:0,
+        showClose:true,
+        message: '<a href="./map" style="color:#ef7c6f">WEB团队2017统计图示发布了，快点击查看</a>'
+      });
     },
     watch: {
     },
@@ -123,6 +177,7 @@
     },
     data: function () {
       return {
+        percent:'',
         loading:false,
         dialogVisible:false,
         loadingType:'',
@@ -144,6 +199,7 @@
         requirement_number:'',
         requirement_text:'',
         active_item:'',
+        activeName: '',
         offset:0,
         count:1,
         total_count:0
@@ -159,14 +215,18 @@
           return null
         }
       },
-      getRequmentList: function () {
+      handleClick(tab, event) {
+        this.getRequmentList(tab.name);
+      },
+      getRequmentList: function (id) {
         this.$http.get('/rm/issues.json',{
           headers: {
             'X-Redmine-API-Key': this.token,
             'Content-Type':'application/json'
           },
           params:{
-               assigned_to_id:this.id
+               assigned_to_id:this.id,
+               tracker_id:id || null
           }
         })
           .then((res) => {
@@ -348,6 +408,56 @@
             this.$message.error(err)
             this.dialogVisible =false;
           })
+      },
+      goMap:function() {
+        this.$router.push({path: '/map'})
+      },
+      paste:function (event){
+        console.log("sss")
+        var clipboardData = event.clipboardData;
+        console.log(clipboardData);
+        var items,item,types;
+        if( clipboardData ){
+          items = clipboardData.items;
+          if( !items ){
+            return;
+          }
+          // 保存在剪贴板中的数据类型
+          types = clipboardData.types || [];
+          for(var i=0 ; i < types.length; i++ ){
+            if( types[i] === 'Files' ){
+              item = items[i];
+              break;
+            }
+          }
+          // 判断是否为图片数据
+          if( item && item.kind === 'file' && item.type.match(/^image\//i) ){
+            // 读取该图片
+            var file = item.getAsFile(),
+                reader = new FileReader();
+            reader.readAsDataURL(file);
+            console.log(reader);
+            //下面是讲粘贴的图片内容传送到后端进行处理，如果直接前端处理可以不要后边的代码
+            var xhr = new XMLHttpRequest();
+            xhr.open('post', '/pasteImage',true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            reader.onload = function(){
+              console.log(reader.result);
+              xhr.send(JSON.stringify({
+                file: reader.result
+              }));
+            };
+            //接收返回数据
+            xhr.onload = function(){
+              var response = JSON.parse(xhr.responseText);
+              if(response.code == 200){
+              //
+              }else{
+              //
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -395,7 +505,7 @@
 }
 .submit-btn{
     border: none;
-    margin-top: 230px;
+    margin-top: 50px;
     font-size: 16px;
     height: 47px;
     line-height: 47px;
