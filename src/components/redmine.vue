@@ -131,8 +131,8 @@
               <el-button type="primary" style="margin-top:20px;" @click="goMap()">2017<i class="el-icon-upload el-icon-date"></i>
               </el-button>
             </div>
-              <textarea @onpaste ="paste()" style="width:500px;height:500px">
-              </textarea>
+              <input type="text" @keyup.ctrl.86 ="paste($event)" @keydown.meta.86 ="paste($event)" style="width:500px;height:500px">
+              </input>
         </div>
        <!--  loading显示 -->
         <el-button type="primary" v-if="loading">
@@ -413,51 +413,34 @@
         this.$router.push({path: '/map'})
       },
       paste:function (event){
-        console.log("sss")
-        var clipboardData = event.clipboardData;
-        console.log(clipboardData);
-        var items,item,types;
-        if( clipboardData ){
-          items = clipboardData.items;
-          if( !items ){
-            return;
-          }
-          // 保存在剪贴板中的数据类型
-          types = clipboardData.types || [];
-          for(var i=0 ; i < types.length; i++ ){
-            if( types[i] === 'Files' ){
-              item = items[i];
-              break;
-            }
-          }
-          // 判断是否为图片数据
-          if( item && item.kind === 'file' && item.type.match(/^image\//i) ){
-            // 读取该图片
-            var file = item.getAsFile(),
-                reader = new FileReader();
-            reader.readAsDataURL(file);
-            console.log(reader);
-            //下面是讲粘贴的图片内容传送到后端进行处理，如果直接前端处理可以不要后边的代码
-            var xhr = new XMLHttpRequest();
-            xhr.open('post', '/pasteImage',true);
-            xhr.setRequestHeader('Content-Type', 'application/json');
-            reader.onload = function(){
-              console.log(reader.result);
-              xhr.send(JSON.stringify({
-                file: reader.result
-              }));
-            };
-            //接收返回数据
-            xhr.onload = function(){
-              var response = JSON.parse(xhr.responseText);
-              if(response.code == 200){
-              //
-              }else{
-              //
-              }
-            }
-          }
-        }
+        var clipboardData = window.event.clipboardData || window.clipboardData || event.clipboardData;  
+        console.log(clipboardData)
+        // console.log(window)
+        // var clipboardData = event.clipboardData;
+        // console.log(clipboardData);
+        // var items,item,types;
+        // if( clipboardData ){
+        //   items = clipboardData.items;
+        //   if( !items ){
+        //     return;
+        //   }
+        //   // 保存在剪贴板中的数据类型
+        //   types = clipboardData.types || [];
+        //   for(var i=0 ; i < types.length; i++ ){
+        //     if( types[i] === 'Files' ){
+        //       item = items[i];
+        //       break;
+        //     }
+        //   }
+        //   // 判断是否为图片数据
+        //   if( item && item.kind === 'file' && item.type.match(/^image\//i) ){
+        //     // 读取该图片
+        //     var file = item.getAsFile(),
+        //         reader = new FileReader();
+        //     reader.readAsDataURL(file);
+        //     console.log(reader);
+        //   }
+        // }
       }
     }
   }
