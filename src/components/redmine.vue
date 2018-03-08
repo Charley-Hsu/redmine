@@ -262,7 +262,6 @@
                 var xmlParser = new xml2js.Parser({ explicitArray : false, mergeAttrs : true });
                 xmlParser.parseString(res.data,(err, result) => {
                     this.options = result.versions.version.slice(-15);
-                    // console.log(this.options)
                     let defaultOp = {
                       id:206,
                       name:'未定版本专用'
@@ -329,7 +328,6 @@
       submit:function () {
         if (this.selected&&this.numbers) {
           let that = this;
-          // console.log(this.selected,this.subject,this.numbers,this.requirement_number)
           this.loadingType = this.$loading({
             lock: true,
             text: '正在为您拆分，请稍后',
@@ -415,7 +413,6 @@
       paste:function (event){
         var clipboardData = window.event.clipboardData || window.clipboardData || event.clipboardData;  
         console.log(clipboardData)
-        // console.log(window)
         // var clipboardData = event.clipboardData;
         // console.log(clipboardData);
         // var items,item,types;
