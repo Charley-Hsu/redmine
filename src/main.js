@@ -9,8 +9,8 @@ Vue.prototype.$http = Axios // 类似于vue-resource的调用方法，之后可�
 Vue.use(ElementUI) // vue全局设置
 Vue.use(VueRouter)
 Vue.use(Echarts)
-import Login from './components/Login'
-import Redmine from './components/Redmine'
+import Login from './components/login'
+import Redmine from './components/redmine'
 import Maps from './components/map'
 import Top from './components/topMap'
 
