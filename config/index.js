@@ -36,10 +36,6 @@ module.exports = {
           target: 'http://localhost:8889',
           changeOrigin: true
         },
-        // '/map':{
-        //   target: 'http://localhost:8889',
-        //   changeOrigin: true
-        // },
         '/rm':{
           target: 'http://redmine.51tiangou.com',
           changeOrigin: true,

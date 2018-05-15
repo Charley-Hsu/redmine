@@ -3,9 +3,9 @@ import json from 'koa-json'
 // import logger from 'koa-logger'
 import auth from './server/routes/auth.js'
 import api from './server/routes/api.js'
+import rm from './server/routes/rm.js'
 import jwt from 'koa-jwt'
 import path from 'path'
-import xml2js from 'xml2js'
 import serve from 'koa-static'
 import historyApiFallback from 'koa2-history-api-fallback'
 import koa_router from 'koa-router'
@@ -13,25 +13,18 @@ import koa_bodyparser from 'koa-bodyparser'
 
 const app = new Koa()
 const router = koa_router()
-const proxy = require('koa-proxies')
-
+const bodyParser = require('koa-bodyparser');
+app.proxy = true;
 app.use(koa_bodyparser())
 app.use(json())
 // app.use(logger())
-
+app.use(bodyParser());
 app.use(async function (ctx, next) {
     let start = new Date()
     await next()
     let ms = new Date() - start
-    console.log('%s %s - %s', ctx.method, ctx.url, ms)
+    // console.log('%s %s - %s', ctx.method, ctx.url, ms)
 })
-
-app.use(proxy('/rm', {
-    target: 'http://redmine.51tiangou.com',
-    changeOrigin: true,
-    rewrite: path => path.replace('/rm', ''),
-    logs: false
-}))
 
 app.use(async function (ctx, next) {  //  如果JWT验证失败，返回验证失败信息
     try {
@@ -50,10 +43,11 @@ app.use(async function (ctx, next) {  //  如果JWT验证失败，返回验证�
     }
 })
 
+
 app.on('error', function (err, ctx) {
     console.log('server error', err)
 })
-
+router.use("/rm", rm.routes())
 router.use('/auth', auth.routes()) // 挂载到koa-router上，同时会让所有的auth的请求路径前面加上'/auth'的请求路径。
 router.use("/api", jwt({secret: 'tgfe'}), api.routes()) // 所有走/api/打头的请求都需要经过jwt验证。
 

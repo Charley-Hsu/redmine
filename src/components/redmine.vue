@@ -161,13 +161,12 @@
 </template>
 <script>
     import jwt from 'jsonwebtoken'
-    import xml2js from 'xml2js'
 
     export default {
         created: function () {
             const userInfo = this.getUserInfo()
             if (userInfo !== null) {
-                this.id = userInfo.id
+                this.id = userInfo.id;
                 this.token = userInfo.token
             } else {
                 this.id = ''
@@ -207,7 +206,6 @@
                 requirement_text: '',
                 active_item: '',
                 activeName: '',
-                offset: 0,
                 count: 1,
                 total_count: 0
             }
@@ -225,24 +223,30 @@
             handleClick(tab, event) {
                 this.getRequmentList(tab.name);
             },
+//            获取需求列表 isok
             getRequmentList: function (id) {
-                this.$http.get('/rm/issues.json', {
-                    headers: {
-                        'X-Redmine-API-Key': this.token,
-                        'Content-Type': 'application/json'
-                    },
-                    params: {
-                        assigned_to_id: this.id,
-                        tracker_id: id || null
-                    }
-                })
+                let headers = {
+                    'X-Redmine-API-Key': this.token,
+                    'Content-Type': 'application/json'
+                };
+                this.$http.post('/rm/issues', {
+                    token: this.token,
+                    assigned_to_id: this.id,
+                    tracker_id: id || null
+                }, {headers: headers})
                     .then((res) => {
-                        this.list = res.data.issues;
+                        console.log(res)
+                        this.list = res.data.data.issues;
                     }, (err) => {
                         this.$message.error(err)
                     })
             },
+//            点击选择状态 isok
             checked: function (item) {
+                let headers = {
+                    'X-Redmine-API-Key': this.token,
+                    'Content-Type': 'application/json'
+                };
                 this.numbers = [];
                 this.nameList = [];
                 this.options = [];
@@ -253,48 +257,33 @@
                 this.pmid = item.author.id;
                 this.requirement_number = item.id;
                 this.requirement_text = item.subject;
-                this.$http.get('/rm/projects/17/versions.xml', {
-                    headers: {
-                        'X-Redmine-API-Key': this.token,
-                        'Content-Type': 'application/xml'
-                    },
-                })
+                this.$http.post('/rm/projects', {
+                    token: this.token
+                }, {headers: headers})
                     .then((res) => {
                         if (res.status === 200) {
-                            var xmlParser = new xml2js.Parser({explicitArray: false, mergeAttrs: true});
-                            xmlParser.parseString(res.data, (err, result) => {
-                                this.options = result.versions.version.slice(-15);
-                                let defaultOp = {
-                                    id: 206,
-                                    name: '未定版本专用'
-                                }
-                                this.options.push(defaultOp)
-                            });
+                            let defaultOp = {
+                                id: 206,
+                                name: '未定版本专用'
+                            }
+                            this.options = res.data.data.versions.slice(-15);
+                            this.options.push(defaultOp)
                         } else {
                             this.$message.error('获取版本信息失败！')
                         }
                     }, (err) => {
                         this.$message.error(err)
                     })
-                this.$http.get('/rm/users.xml', {
-                    headers: {
-                        'X-Redmine-API-Key': '9f48a0f107ecd272dd7b3ca603d9d8e94335c39f',
-                        'Content-Type': 'application/xml'
-                    },
-                    params: {
-                        //key: '9f48a0f107ecd272dd7b3ca603d9d8e94335c39f', //需要管理员权限，用了运维的账号获取人员列表
-                        limit: 100,
-                        offset: 0
-                    }
-                })
+                this.$http.post('/rm/users', {
+                    token: '9f48a0f107ecd272dd7b3ca603d9d8e94335c39f', //需要管理员权限，用了运维的账号获取人员列表
+                    limit: 100,
+                    offset: 0
+                }, {headers: headers})
                     .then((res) => {
-                        var xmlParser = new xml2js.Parser({explicitArray: false, mergeAttrs: true});
-                        xmlParser.parseString(res.data, (err, result) => {
-                            this.nameList = this.nameList.concat(result.users.user);
-                            this.total_count = result.users.total_count;
-                        });
+                        this.nameList = this.nameList.concat(res.data.data.users);
+                        this.total_count = res.data.data.total_count;
                         if (this.total_count) {
-                            this.getUsers(this.offset)//循环获取人员列表
+                            this.getUsers()//循环获取人员列表
                         } else {
                             this.$message.error('获取人员信息失败！')
                         }
@@ -302,31 +291,26 @@
                         this.$message.error(err)
                     })
             },
-            getUsers: function (offset) {
+//            获取人员列表 isok
+            getUsers: function () {
+                let headers = {
+                    'X-Redmine-API-Key': this.token,
+                    'Content-Type': 'application/json'
+                };
                 for (this.count; this.count * 100 < this.total_count; this.count++) {
-                    this.$http.get('/rm/users.xml', {
-                        headers: {
-                            'X-Redmine-API-Key': '9f48a0f107ecd272dd7b3ca603d9d8e94335c39f',
-                            'Content-Type': 'application/xml'
-                        },
-                        params: {
-                            //key: '9f48a0f107ecd272dd7b3ca603d9d8e94335c39f', //需要管理员权限，用了运维的账号获取人员列表
-                            limit: 100,
-                            offset: 100 * this.count
-                        }
-                    })
-
+                    this.$http.post('/rm/users', {
+                        token: '9f48a0f107ecd272dd7b3ca603d9d8e94335c39f',
+                        limit: 100,
+                        offset: 100 * this.count
+                    }, {headers: headers})
                         .then((res) => {
-                            var xmlParser = new xml2js.Parser({explicitArray: false, mergeAttrs: true});
-                            xmlParser.parseString(res.data, (err, result) => {
-                                this.nameList = this.nameList.concat(result.users.user);
-                                console.log(this.total_count, this.count, this.offset)
-                            });
+                            this.nameList = this.nameList.concat(res.data.data.users);
                         }, (err) => {
                             this.$message.error(err)
                         })
                 }
             },
+//            拆分功能按钮
             submit: function () {
                 if (this.selected && this.numbers) {
                     let that = this;
@@ -344,12 +328,13 @@
                     alert("请输入必要信息")
                 }
             },
+//            创建功能
             createIssue: function (id) {
-                let url = '/rm/issues.json';
+                let url = '/rm/creatIssues';
                 let headers = {
                     'X-Redmine-API-Key': this.token,
                     'Content-Type': 'application/json'
-                }
+                };
                 this.$http.post(url, {
                     "issue": {
                         "project_id": 4,
@@ -368,46 +353,47 @@
                                 "value": "web"
                             }
                         ],
-                    }
+                    },
+                    token: this.token
                 }, {headers: headers})
                     .then((res) => {
+                        console.log(res.data.success)
+                        if (res.data.success) {
                             this.numbers = '';
                             this.loadingType.close();
                             this.loading = false;
                             this.$message.success("一条功能设置成功");
                             this.dialogVisible = true;
-                        },
-                        (err) => {
-                            this.$message.error(err)
+                        } else {
+                            this.$message.error(res.data)
                             this.loadingType.close();
                             this.loading = false;
-                        })
+                        }
+                    })
             },
             assignedBack: function () {
-                let url = '/rm/issues/' + this.requirement_number + '.json';
+                let url = '/rm/assignedBack';
                 let headers = {
                     'X-Redmine-API-Key': this.token,
                     'Content-Type': 'application/json'
                 }
-                this.$http.put(url, {
-                    "issue": {
-                        "project_id": 4,
-                        "status_id": 14,
-                        "priority_id": 2,//优先级：2->普通
-                        "fixed_version_id": this.selected,//版本号
-                        "assigned_to_id": this.pmid//指给人员
-                    }
+                this.$http.post(url, {
+                    fixed_version_id: this.selected,
+                    assigned_to_id: this.pmid,
+                    token: this.token,
+                    number: this.requirement_number
                 }, {headers: headers})
                     .then((res) => {
+                        if (res.data.success) {
                             this.selected = '';
                             this.$message.success("指回成功");
                             this.dialogVisible = false;
-                        },
-                        (err) => {
+                        } else {
                             this.selected = '';
                             this.$message.error(err)
                             this.dialogVisible = false;
-                        })
+                        }
+                    })
             },
             goMap: function () {
                 this.$router.push({path: '/map'})
