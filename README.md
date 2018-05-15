@@ -11,8 +11,17 @@ npm install
 # koa2 serve with hot reload at localhost:8889
 npm run server
 
-# build the program
+# vue with hot reload at localhost:8889
 npm run dev
+
+# build the program
+npm run build
+
+# koa start the program by koa static files
+npm run server
+
+# start the program by vue & koa server
+npm run start
 ```
 ## Notice
 
