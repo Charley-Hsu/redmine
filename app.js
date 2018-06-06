@@ -4,6 +4,7 @@ import json from 'koa-json'
 import auth from './server/routes/auth.js'
 import api from './server/routes/api.js'
 import rm from './server/routes/rm.js'
+import svn from './server/routes/svn.js'
 import jwt from 'koa-jwt'
 import path from 'path'
 import serve from 'koa-static'
@@ -48,6 +49,7 @@ app.on('error', function (err, ctx) {
     console.log('server error', err)
 })
 router.use("/rm", rm.routes())
+router.use("/svn", svn.routes())
 router.use('/auth', auth.routes()) // 挂载到koa-router上，同时会让所有的auth的请求路径前面加上'/auth'的请求路径。
 router.use("/api", jwt({secret: 'tgfe'}), api.routes()) // 所有走/api/打头的请求都需要经过jwt验证。
 

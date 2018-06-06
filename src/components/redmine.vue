@@ -135,7 +135,7 @@
             <div class="submit_content flex2 center text-center" v-else>
                 <div>
                 <span>
-                  请点击选择左边TAB项，或者点击下方按钮进入2017年度总结
+                  请点击选择左边TAB项，或者点击下方按钮进入2017年度总结。
                 </span>
                 </div>
                 <el-button type="primary" style="margin-top:20px;" @click="goMap()">2017<i
@@ -235,7 +235,6 @@
                     tracker_id: id || null
                 }, {headers: headers})
                     .then((res) => {
-                        console.log(res)
                         this.list = res.data.data.issues;
                     }, (err) => {
                         this.$message.error(err)
@@ -268,6 +267,7 @@
                             }
                             this.options = res.data.data.versions.slice(-15);
                             this.options.push(defaultOp)
+                            console.log(this.options)
                         } else {
                             this.$message.error('获取版本信息失败！')
                         }
@@ -357,7 +357,6 @@
                     token: this.token
                 }, {headers: headers})
                     .then((res) => {
-                        console.log(res.data.success)
                         if (res.data.success) {
                             this.numbers = '';
                             this.loadingType.close();
@@ -371,6 +370,7 @@
                         }
                     })
             },
+//            需求指回
             assignedBack: function () {
                 let url = '/rm/assignedBack';
                 let headers = {
@@ -385,13 +385,33 @@
                 }, {headers: headers})
                     .then((res) => {
                         if (res.data.success) {
-                            this.selected = '';
                             this.$message.success("指回成功");
                             this.dialogVisible = false;
+                            this.addSvn()
                         } else {
-                            this.selected = '';
-                            this.$message.error(err)
+                            this.$message.error("指回失败")
                             this.dialogVisible = false;
+                        }
+                    })
+            },
+//            添加到svn管理
+            addSvn: function () {
+                let url = '/svn/addSvn';
+                let headers = {
+                    'Content-Type': 'application/json'
+                }
+                this.$http.post(url, {
+                    release: this.selected,
+                    description: this.subject,
+                    requirement: this.requirement_number,
+                    date: this.selected
+                }, {headers: headers})
+                    .then((res) => {
+                        if (res.data.success) {
+                            this.$message.success("添加Svn成功");
+                            location.reload();
+                        } else {
+                            this.$message.error("添加Svn失败")
                         }
                     })
             },
