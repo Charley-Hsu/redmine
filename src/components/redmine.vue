@@ -30,6 +30,12 @@
                             <el-tag type="success" style="height:20px;line-height:20px;margin-left:10px;"
                                     v-if="item.status">{{item.status.name}}
                             </el-tag>
+                            <el-tag type="info" style="height:20px;line-height:20px;margin-left:10px;"
+                                    v-if="activeName == 1 && item.custom_fields">{{item.custom_fields[0].value}}
+                            </el-tag>
+                            <el-tag type="info" style="height:20px;line-height:20px;float: right;margin-right: 30px;"
+                                    v-if="item.fixed_version">{{item.fixed_version.name}}
+                            </el-tag>
                         </div>
                         <div>
                             <span class="fs-12">{{item.subject}}</span>
@@ -173,12 +179,12 @@
                 this.token = ''
             }
             this.getRequmentList()//获取需求列表
-            this.$message({
-                dangerouslyUseHTMLString: true,
-                duration: 0,
-                showClose: true,
-                message: '<a href="./map" style="color:#ef7c6f">WEB团队2017统计图示发布了，快点击查看</a>'
-            });
+            // this.$message({
+            //     dangerouslyUseHTMLString: true,
+            //     duration: 0,
+            //     showClose: true,
+            //     message: '<a href="./map" style="color:#ef7c6f">WEB团队2017统计图示发布了，快点击查看</a>'
+            // });
         },
         watch: {},
         computed: {},
