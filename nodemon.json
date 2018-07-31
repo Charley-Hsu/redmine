@@ -1,0 +1,22 @@
+{
+  "restartable": "rsrm",
+  "ignore": [
+    ".git",
+    "node_modules/**/node_modules"
+  ],
+  "verbose": true,
+  "execMap": {
+    "": "node",
+    "js": "node --harmony"
+  },
+  "events": {
+    "start": "THE RM IS START",
+    "restart": "THE RM HAS RESTART",
+    "stop": "THE RM IS STOP"
+  },
+  "watch": [
+    "src/"
+  ],
+  "ext": "js json",
+  "legacy-watch": false
+}
