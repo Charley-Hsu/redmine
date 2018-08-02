@@ -1,14 +1,16 @@
 <template>
-    <div class="bg_wrap" style="padding: 20px;">
+    <div class="bg_wrap">
         <div class="logo_head" style="height:80px;">
             <div class="float-left">
-                <img src="../img/logo.png" width="226" alt="">
+                <img src="../img/rmtext.png" width="300" alt="">
             </div>
             <div class="float-right">
-                <img src="../img/tgfe.png" width="90" alt="">
+                <a href="https://github.com/tgoufe">
+                    <img src="../img/github.png" width="90" alt="">
+                </a>
             </div>
         </div>
-        <div class="content_wrap flex-container" style="margin-top:90px;align-items:flex-start">
+        <div class="content_wrap flex-container" style="margin-top:90px;align-items:flex-start;padding-left: 40px;padding-right: 40px;">
             <div class="list_content flex1">
                 <div>
                     <img src="../img/folder-opened-icon.png" width="24" alt="">
@@ -179,12 +181,13 @@
                 this.token = ''
             }
             this.getRequmentList()//获取需求列表
-            // this.$message({
-            //     dangerouslyUseHTMLString: true,
-            //     duration: 0,
-            //     showClose: true,
-            //     message: '<a href="./map" style="color:#ef7c6f">WEB团队2017统计图示发布了，快点击查看</a>'
-            // });
+            this.$message({
+                dangerouslyUseHTMLString: true,
+                duration: 0,
+                center: true,
+                showClose: true,
+                message: '<a href="./main" style="color:#ef7c6f">更多内容敬请期待！</a>'
+            });
         },
         watch: {},
         computed: {},
