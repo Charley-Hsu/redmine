@@ -9,10 +9,11 @@ Vue.prototype.$http = Axios // 类似于vue-resource的调用方法，之后可�
 Vue.use(ElementUI) // vue全局设置
 Vue.use(VueRouter)
 Vue.use(Echarts)
-import Login from './components/Login'
-import Redmine from './components/Redmine'
+import Login from './components/login'
+import Redmine from './components/redmine'
 import Maps from './components/map'
 import Top from './components/topMap'
+import Main from './components/main'
 
 const router = new VueRouter({
   mode: 'history',
@@ -29,6 +30,9 @@ const router = new VueRouter({
   }, {
     path: '/top',
     component: Top
+  }, {
+      path: '/main',
+      component: Main
   }, {
     path: '*',
     redirect: '/' // 输入其他不存在的地址自动跳回首页

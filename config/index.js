@@ -24,7 +24,7 @@ module.exports = {
     dev: {
         env: require('./dev.env'),
         port: 8089,
-        autoOpenBrowser: true,
+        autoOpenBrowser: false,
         assetsSubDirectory: 'static',
         assetsPublicPath: '/',
       proxyTable: {
@@ -36,16 +36,9 @@ module.exports = {
           target: 'http://localhost:8889',
           changeOrigin: true
         },
-        // '/map':{
-        //   target: 'http://localhost:8889',
-        //   changeOrigin: true
-        // },
         '/rm':{
-          target: 'http://redmine.51tiangou.com',
-          changeOrigin: true,
-          pathRewrite: {
-            '^/rm': ''
-          }
+          target: 'http://localhost:8889',
+          changeOrigin: true
         }
       },
         // CSS Sourcemaps off by default because relative paths are "buggy"

@@ -1,0 +1,25 @@
+{
+  "presets": [
+    [
+      "env",
+      {
+        "modules": false
+      }
+    ],
+    "es2015"
+  ],
+  "plugins": [
+    [
+      "transform-runtime",
+      {
+        "polufill": false,
+        "regenerator": true
+      }
+    ],
+    "syntax-dynamic-import",
+    "transform-object-rest-spread"
+  ],
+  "ignore": [
+    "dist/*.js"
+  ]
+}
